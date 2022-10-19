@@ -8,7 +8,7 @@ import lmfit as lm
 from scipy.ndimage import uniform_filter1d
 
 # Load data
-data1= np.loadtxt("/Users/luna/Documents/GitHub/409 muon/Oct_12_data.txt")[5:-3] 
+data1= np.loadtxt("/Users/luna/Documents/GitHub/409 muon/Oct14.txt")[5:-3] 
 print("here is the sum", np.sum(data1))
 
 
@@ -23,8 +23,9 @@ x2 = np.arange(5,2045,1)
 ppot_arr = []
 sum_data_total = []
 time2 = (x2+173.7726257888435)/259.6537265639224
+N_arr = np.arange(5,50,1)
 for n in range(5,50):
-    N = 36
+    N = n
 
     num_bins = len(data1)//N
     x= np.arange(5,2045,N)
@@ -49,8 +50,8 @@ for n in range(5,50):
     ymodel = emodel.eval(params,  x= time1[0:len(sum_data)])
     yerr1= np.sqrt(sum_data)
     popt, pcov = scipy.optimize.curve_fit(expon, time1[0:len(sum_data)], sum_data, sigma = yerr1)
-    tau.append(popt[1])
-    tau_uncertainty.append(np.sqrt(np.diag(pcov))[1])
+    # tau.append(result[])
+    # tau_uncertainty.append(np.sqrt(np.diag(pcov))[1])
     ppot_arr.append(popt)
 
     weights = []
@@ -64,22 +65,30 @@ for n in range(5,50):
     ymodel = emodel.eval(params,  x= time1[0:len(sum_data)])
 
 
+
     result=emodel.fit(sum_data, params, x= time1[0:len(sum_data)],weights=weights[0:len(sum_data)])
+    tau.append(result.params['b'].value)
+    tau_uncertainty.append(result.params['b'].stderr)
     print(result.fit_report())
 
 index = np.where(tau_uncertainty==np.nanmin(tau_uncertainty))
+print(index)
 para =  ppot_arr[index[0][0]]
 y_fit_muon = expon(time1[0:len(sum_data)], para[0], para[1], para[2])
 lifetime = tau[index[0][0]]
 lifetime_un = tau_uncertainty[index[0][0]]
 print(lifetime,lifetime_un)
 
-plt.bar(time1[0:len(sum_data)],  sum_data_total[index[0][0]], edgecolor=None, width = 0.12)
-plt.errorbar(time1[0:len(sum_data)], sum_data, yerr= np.sqrt(sum_data),fmt = "r.",  elinewidth=1, markersize=1, capsize=3, color="k")
-plt.plot( time1[0:len(sum_data)], y_fit_muon,'r-', label = r"$\tau_\mu$ = {:.2f} $\pm$ {:.2f} $\mu s$".format(lifetime, lifetime_un))
-# plt.plot(time2, data1,'g', label = "raw data")
-plt.ylabel(r"Counts")
-plt.xlabel(r"Time $\mu s$")
+# special = np.zeros(len(tau))
+N_2 = 36
+# plt.bar(time1[0:len(sum_data)],  sum_data_total[index[0][0]], edgecolor=None, width = 0.12)
+# plt.errorbar(time1[0:len(sum_data)], sum_data, yerr= np.sqrt(sum_data),fmt = "r.",  elinewidth=1, markersize=1, capsize=3, color="k")
+plt.plot(N_arr, tau_uncertainty,'b.')
+plt.plot(N_2, tau_uncertainty[31], 'r.')
+print(tau)
+# # plt.plot(time2, data1,'g', label = "raw data")
+plt.xlabel(r"Bin size")
+plt.ylabel(r"$\tau_\mu$ uncertainty")
 plt.legend()
 plt.show()
 
